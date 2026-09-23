@@ -79,62 +79,64 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
           className="hidden"
         />
 
-        <div className="flex flex-col items-center justify-center space-y-3">
+        <div className="flex flex-col items-center justify-center space-y-3 py-4">
           <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-inner">
             <UploadCloud className="w-7 h-7" />
           </div>
 
-          <div>
-            <h3 className="text-base font-semibold text-slate-100">
-              Drag & Drop your CSV or Excel files here
+          <div className="space-y-1">
+            <h3 className="text-lg font-bold text-slate-100 tracking-tight">
+              Import your data
             </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Select multiple files simultaneously • Maximum local browser capacity
+            <p className="text-sm font-medium text-cyan-300">
+              Drop CSV or XLSX files here
+            </p>
+            <p className="text-xs text-slate-400">
+              Your files are processed locally in your browser.
             </p>
           </div>
 
           <div className="flex items-center space-x-2 text-xs text-slate-400 pt-1">
-            <span className="flex items-center space-x-1 bg-slate-800/80 px-2.5 py-1 rounded text-slate-300 border border-slate-700">
+            <span className="flex items-center space-x-1.5 bg-slate-800/80 px-2.5 py-1 rounded text-slate-300 border border-slate-700/80">
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Excel (.xlsx)</span>
+              <span className="font-mono text-[11px]">.xlsx</span>
             </span>
-            <span className="flex items-center space-x-1 bg-slate-800/80 px-2.5 py-1 rounded text-slate-300 border border-slate-700">
+            <span className="flex items-center space-x-1.5 bg-slate-800/80 px-2.5 py-1 rounded text-slate-300 border border-slate-700/80">
               <FileText className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Delimited (.csv)</span>
+              <span className="font-mono text-[11px]">.csv</span>
+            </span>
+            <span className="text-[11px] text-slate-500 font-mono">
+              • 100% In-Memory Privacy
             </span>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-3 flex flex-wrap items-center justify-center gap-3">
             <button
               type="button"
               disabled={isLoading}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold rounded-lg text-xs transition-colors shadow-sm"
+              className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-lg text-xs transition-all shadow-md shadow-cyan-950/40 cursor-pointer active:scale-95"
               onClick={(e) => {
                 e.stopPropagation();
                 fileInputRef.current?.click();
               }}
             >
-              {isLoading ? 'Ingesting Files...' : 'Browse Local Files'}
+              {isLoading ? 'Processing Files...' : 'Browse Files'}
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onLoadDemoData();
+              }}
+              disabled={isLoading}
+              className="flex items-center space-x-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 hover:border-cyan-500/40 rounded-lg transition-colors font-medium text-xs cursor-pointer active:scale-95"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Load Sample Dataset</span>
             </button>
           </div>
         </div>
-      </div>
-
-      {/* Demo sample loader for rapid testing */}
-      <div className="mt-4 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-        <div className="flex items-center space-x-2 text-slate-400">
-          <span className="font-mono text-cyan-400">PRO-TIP:</span>
-          <span>Want to test multi-file Excel sheets without uploading your own?</span>
-        </div>
-        <button
-          type="button"
-          onClick={onLoadDemoData}
-          disabled={isLoading}
-          className="flex items-center space-x-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 rounded-lg transition-colors font-medium shrink-0"
-        >
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-          <span>Load Sample 'Customers.xlsx' & 'Orders.csv'</span>
-        </button>
       </div>
     </div>
   );

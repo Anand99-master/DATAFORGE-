@@ -57,24 +57,28 @@ export const ExportWorkspace: React.FC<ExportWorkspaceProps> = ({
 
   if (!dataset || !validation.isValid) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center text-xs text-slate-400 space-y-4">
-        <AlertCircle className="w-10 h-10 text-rose-400 mx-auto" />
-        <div>
-          <h4 className="font-bold text-base text-slate-100">No Valid Result Dataset to Export</h4>
-          <p className="text-slate-400 mt-1 max-w-md mx-auto">
+      <div className="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-12 text-center max-w-lg mx-auto space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mx-auto shadow-inner">
+          <Download className="w-7 h-7" />
+        </div>
+        <div className="space-y-1">
+          <h4 className="font-bold text-lg text-slate-100 tracking-tight">
+            No dataset ready to export
+          </h4>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
             {validation.errors.length > 0
               ? validation.errors.join(' ')
-              : 'Please execute a field selection, filter, or multi-file join first to generate a final result.'}
+              : 'Generate a filtered selection or execute a multi-file join first to prepare records for export.'}
           </p>
         </div>
         <div className="pt-2">
           <button
             type="button"
             onClick={onBackToModify}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs rounded-lg transition-colors"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-md shadow-cyan-950/40"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Go to Selection / Join Module</span>
+            <span>Go to Selection / Join</span>
           </button>
         </div>
       </div>
@@ -155,37 +159,93 @@ export const ExportWorkspace: React.FC<ExportWorkspaceProps> = ({
           {/* EXPORT SUMMARY PANEL */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-5">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Layers className="w-4 h-4 text-cyan-400" />
-                <h4 className="font-bold text-sm text-slate-100 uppercase tracking-wide font-mono">
-                  EXPORT SUMMARY
-                </h4>
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-base text-slate-100 tracking-tight">
+                    Your dataset is ready
+                  </h4>
+                  <p className="text-xs text-slate-400">
+                    Deterministic in-memory transformation completed successfully.
+                  </p>
+                </div>
               </div>
-              <span className="text-xs text-slate-400 font-mono">
-                {dataset.rows.length.toLocaleString()} rows • {dataset.columns.length} columns
+              <span className="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/80 px-2.5 py-1 rounded-full font-mono flex items-center space-x-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Ready to Download</span>
               </span>
             </div>
 
-            {/* Metrics Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {/* Metrics KPI Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
-                <div className="text-[10px] font-mono text-slate-500 uppercase">Total Rows</div>
-                <div className="text-lg font-bold font-mono text-cyan-300 mt-0.5">
+                <div className="text-[10px] font-mono text-slate-400 uppercase">Rows</div>
+                <div className="text-xl font-bold font-mono text-cyan-300 mt-0.5 tabular-nums">
                   {dataset.rows.length.toLocaleString()}
                 </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Records prepared</div>
               </div>
 
               <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
-                <div className="text-[10px] font-mono text-slate-500 uppercase">Total Columns</div>
-                <div className="text-lg font-bold font-mono text-emerald-300 mt-0.5">
+                <div className="text-[10px] font-mono text-slate-400 uppercase">Columns</div>
+                <div className="text-xl font-bold font-mono text-emerald-300 mt-0.5 tabular-nums">
                   {dataset.columns.length}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Fields projected</div>
+              </div>
+
+              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                <div className="text-[10px] font-mono text-slate-400 uppercase">Source Datasets</div>
+                <div className="text-xs font-semibold text-slate-200 mt-1 truncate" title={dataset.sourceDatasets?.join(', ') || dataset.sourceDescription}>
+                  {dataset.sourceDatasets?.join(', ') || dataset.sourceDescription || 'Local file'}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5 uppercase font-mono">
+                  {dataset.sourceType}
                 </div>
               </div>
 
-              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 col-span-2 sm:col-span-1">
-                <div className="text-[10px] font-mono text-slate-500 uppercase">Active Target</div>
-                <div className="text-lg font-bold font-mono text-slate-100 uppercase mt-0.5">
-                  {selectedFormat}
+              <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800">
+                <div className="text-[10px] font-mono text-slate-400 uppercase">Join / Extraction</div>
+                <div className="text-xs font-semibold text-amber-300 mt-1 truncate" title={dataset.joinInformation || dataset.sourceType}>
+                  {dataset.joinInformation || (dataset.sourceType === 'join' ? 'Relational Join' : 'Direct Selection')}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  Deterministic
+                </div>
+              </div>
+            </div>
+
+            {/* Detailed Spec Attributes */}
+            <div className="bg-slate-950 rounded-xl border border-slate-800/80 p-4 space-y-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <span className="text-slate-400 block font-medium mb-1">Source Datasets:</span>
+                  <div className="font-mono text-slate-200 bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800 truncate">
+                    {dataset.sourceDatasets?.join(' + ') || dataset.sourceDescription || 'Local Ingestion'}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 block font-medium mb-1">Join Information:</span>
+                  <div className="font-mono text-cyan-300 bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800 truncate">
+                    {dataset.joinInformation || (dataset.sourceType === 'join' ? 'Multi-file Join' : 'N/A (Single dataset)')}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 block font-medium mb-1">Applied Filters:</span>
+                  <div className="font-mono text-amber-300 bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800 truncate">
+                    {dataset.filtersDescription || 'None (all rows preserved)'}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-slate-400 block font-medium mb-1">Selected Fields ({dataset.columns.length}):</span>
+                  <div className="font-mono text-slate-300 bg-slate-900 px-2.5 py-1.5 rounded border border-slate-800 truncate" title={dataset.columns.join(', ')}>
+                    {dataset.columns.join(', ')}
+                  </div>
                 </div>
               </div>
             </div>

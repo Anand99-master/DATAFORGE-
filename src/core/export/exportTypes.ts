@@ -18,6 +18,12 @@ export interface ExportDataset {
   sourceType: 'selection' | 'join';
   /** Optional human-readable description of the origin */
   sourceDescription?: string;
+  /** Source dataset names */
+  sourceDatasets?: string[];
+  /** Filter summary string */
+  filtersDescription?: string;
+  /** Relational join details */
+  joinInformation?: string;
 }
 
 export type ExportFormat = 'csv' | 'xlsx';

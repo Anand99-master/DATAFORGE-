@@ -23,7 +23,7 @@ import { JoinTypeSelector } from './JoinTypeSelector';
 import { JoinCompatibilityAlerts } from './JoinCompatibilityAlerts';
 import { JoinColumnOutputSelector } from './JoinColumnOutputSelector';
 import { JoinSummaryAndStats } from './JoinSummaryAndStats';
-import { GitMerge, Database, AlertCircle } from 'lucide-react';
+import { GitMerge, Database, AlertCircle, ArrowDown } from 'lucide-react';
 
 interface JoinWorkspaceProps {
   files: SourceFile[];
@@ -160,16 +160,23 @@ export const JoinWorkspace: React.FC<JoinWorkspaceProps> = ({
 
   if (allDatasets.length < 2) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center text-xs text-slate-400 space-y-3">
-        <GitMerge className="w-10 h-10 text-cyan-500 mx-auto" />
-        <h4 className="font-bold text-base text-slate-100">
-          Multi-File Relational Matching & Join
-        </h4>
-        <p className="max-w-md mx-auto text-slate-400">
-          To combine related records, you need at least two imported datasets (e.g. <code>Customers.xlsx</code> and <code>Orders.csv</code>).
-        </p>
-        <p className="text-slate-500">
-          Go back to the Ingest tab to import an additional file or click "Load Sample" to use the pre-built multi-dataset package.
+      <div className="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-12 text-center max-w-xl mx-auto space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mx-auto shadow-inner">
+          <GitMerge className="w-7 h-7" />
+        </div>
+        <div className="space-y-1">
+          <h4 className="font-bold text-lg text-slate-100 tracking-tight">
+            At least two datasets required
+          </h4>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            Relational matching joins records across two separate files. Currently {allDatasets.length} dataset is available.
+          </p>
+        </div>
+        <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 max-w-md mx-auto text-xs text-slate-300 font-mono">
+          Example: <span className="text-cyan-400">Customers.xlsx</span> ⋈ <span className="text-amber-400">Orders.csv</span> on <span className="text-emerald-400">Customer_ID</span>
+        </div>
+        <p className="text-[11px] text-slate-500">
+          Import a second CSV/XLSX file in the Ingest tab or load the sample dataset to perform relational joins.
         </p>
       </div>
     );
@@ -177,6 +184,88 @@ export const JoinWorkspace: React.FC<JoinWorkspaceProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Relational Join Flow Overview Card */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
+        <div className="text-xs font-mono text-cyan-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <GitMerge className="w-4 h-4 text-cyan-400" />
+            <span className="font-bold text-slate-200">RELATIONAL JOIN PIPELINE</span>
+          </div>
+          <span className="text-[11px] text-slate-400 font-sans">
+            Deterministic In-Memory Hash Join
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-7 items-center gap-2 text-center text-xs">
+          {/* PRIMARY DATASET */}
+          <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex flex-col justify-center min-h-[72px]">
+            <div className="text-[10px] font-mono text-cyan-400 uppercase font-bold tracking-wider">
+              PRIMARY DATASET
+            </div>
+            <div className="font-semibold text-slate-100 truncate mt-1 text-xs">
+              {primaryDataset?.fileName || 'Select Primary'}
+            </div>
+            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+              {primaryDataset ? `${primaryDataset.rowCount} rows` : '—'}
+            </div>
+          </div>
+
+          {/* Arrow */}
+          <div className="flex justify-center text-cyan-400 py-1 md:py-0">
+            <ArrowDown className="w-4 h-4 md:-rotate-90 text-cyan-400" />
+          </div>
+
+          {/* MATCH COLUMN */}
+          <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex flex-col justify-center min-h-[72px]">
+            <div className="text-[10px] font-mono text-cyan-400 uppercase font-bold tracking-wider">
+              MATCH COLUMN
+            </div>
+            <div className="font-mono text-cyan-300 font-bold truncate mt-1 text-xs">
+              {primaryKey || 'Key'} = {secondaryKey || 'Key'}
+            </div>
+            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+              Relational Equi-Join
+            </div>
+          </div>
+
+          {/* Arrow */}
+          <div className="flex justify-center text-cyan-400 py-1 md:py-0">
+            <ArrowDown className="w-4 h-4 md:-rotate-90 text-cyan-400" />
+          </div>
+
+          {/* JOIN TYPE */}
+          <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex flex-col justify-center min-h-[72px]">
+            <div className="text-[10px] font-mono text-cyan-400 uppercase font-bold tracking-wider">
+              JOIN TYPE
+            </div>
+            <div className="font-bold text-emerald-400 uppercase mt-1 text-xs">
+              {joinType} Join
+            </div>
+            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+              Deterministic Merge
+            </div>
+          </div>
+
+          {/* Arrow */}
+          <div className="flex justify-center text-cyan-400 py-1 md:py-0">
+            <ArrowDown className="w-4 h-4 md:-rotate-90 text-cyan-400" />
+          </div>
+
+          {/* SECONDARY DATASET */}
+          <div className="bg-slate-950 border border-slate-800 p-3 rounded-xl flex flex-col justify-center min-h-[72px]">
+            <div className="text-[10px] font-mono text-cyan-400 uppercase font-bold tracking-wider">
+              SECONDARY DATASET
+            </div>
+            <div className="font-semibold text-slate-100 truncate mt-1 text-xs">
+              {secondaryDataset?.fileName || 'Select Secondary'}
+            </div>
+            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+              {secondaryDataset ? `${secondaryDataset.rowCount} rows` : '—'}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* 1. Dataset Pair Selector */}
       <DatasetPairSelector
         files={files}

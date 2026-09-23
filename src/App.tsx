@@ -24,6 +24,7 @@ import {
   Activity,
   HardDriveDownload,
 } from 'lucide-react';
+import './index.css';
 import { PIPELINE_STAGES } from './core/pipeline';
 import { SourceFile, SheetDataset, FilterGroup, ExecutionResult } from './core/types';
 import { ingestMultipleFiles, generateDemoDatasets } from './core/ingestion';
@@ -39,7 +40,16 @@ import { JoinResultPreview } from './components/preview/JoinResultPreview';
 import { JoinExecutionResult } from './core/engine/join/joinTypes';
 import { ExportWorkspace } from './components/export/ExportWorkspace';
 import { ExportDataset } from './core/export/exportTypes';
-import { ArrowRight, CheckSquare, Eye, GitMerge, Download } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckSquare,
+  Eye,
+  GitMerge,
+  Download,
+  Table,
+  Columns,
+  ChevronDown,
+} from 'lucide-react';
 
 type MainView = 'ingestion' | 'selection' | 'join' | 'preview' | 'export' | 'architecture';
 
@@ -92,6 +102,10 @@ export default function App() {
 
   // Active dataset configured for deterministic export
   const currentExportDataset: ExportDataset | null = useMemo(() => {
+    const filterDesc = filterGroups.length > 0
+      ? `${filterGroups.reduce((acc, g) => acc + g.conditions.length, 0)} condition(s) across ${filterGroups.length} group(s)`
+      : 'None (all rows preserved)';
+
     if (previewTab === 'join' && joinResult) {
       return {
         columns: joinResult.result.columns,
@@ -102,6 +116,9 @@ export default function App() {
           .replace(/[^a-z0-9_]/gi, '_'),
         sourceType: 'join',
         sourceDescription: `${joinResult.primaryName} ⋈ ${joinResult.secondaryName} (${joinResult.joinType.toUpperCase()} JOIN)`,
+        sourceDatasets: [joinResult.primaryName, joinResult.secondaryName],
+        joinInformation: `${joinResult.primaryName} ⋈ ${joinResult.secondaryName} (${joinResult.joinType.toUpperCase()} JOIN)`,
+        filtersDescription: 'Relational equi-join matching predicate',
       };
     }
     if (previewTab === 'selection' && executionResult) {
@@ -117,6 +134,9 @@ export default function App() {
         sourceDescription: sheet
           ? `${sheet.fileName} (${sheet.sheetName})`
           : `${executionResult.datasetName || 'Dataset'} (${executionResult.sheetName || 'Selection'})`,
+        sourceDatasets: [sheet ? sheet.fileName : executionResult.datasetName || 'Source Dataset'],
+        joinInformation: 'N/A (Single dataset extraction)',
+        filtersDescription: filterDesc,
       };
     }
     if (joinResult) {
@@ -129,6 +149,9 @@ export default function App() {
           .replace(/[^a-z0-9_]/gi, '_'),
         sourceType: 'join',
         sourceDescription: `${joinResult.primaryName} ⋈ ${joinResult.secondaryName} (${joinResult.joinType.toUpperCase()} JOIN)`,
+        sourceDatasets: [joinResult.primaryName, joinResult.secondaryName],
+        joinInformation: `${joinResult.primaryName} ⋈ ${joinResult.secondaryName} (${joinResult.joinType.toUpperCase()} JOIN)`,
+        filtersDescription: 'Relational equi-join matching predicate',
       };
     }
     if (executionResult) {
@@ -144,10 +167,13 @@ export default function App() {
         sourceDescription: sheet
           ? `${sheet.fileName} (${sheet.sheetName})`
           : `${executionResult.datasetName || 'Dataset'} (${executionResult.sheetName || 'Selection'})`,
+        sourceDatasets: [sheet ? sheet.fileName : executionResult.datasetName || 'Source Dataset'],
+        joinInformation: 'N/A (Single dataset extraction)',
+        filtersDescription: filterDesc,
       };
     }
     return null;
-  }, [previewTab, joinResult, executionResult, files, selectedDatasetId]);
+  }, [previewTab, joinResult, executionResult, files, selectedDatasetId, filterGroups]);
 
   // Handle files selected via file input or drag-and-drop
   const handleFilesSelected = async (newFiles: File[]) => {
@@ -264,134 +290,137 @@ export default function App() {
       <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-cyan-500/10 border border-cyan-500/30 rounded-lg text-cyan-400">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-inner">
               <Boxes className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                <span className="font-extrabold text-xl tracking-tight text-white leading-none">
                   DataForge
                 </span>
-                <span className="px-2 py-0.5 text-xs font-mono bg-cyan-950 text-cyan-400 border border-cyan-800 rounded">
-                  v0.2 Ingestion Ready
-                </span>
               </div>
-              <p className="text-xs text-slate-400">Deterministic Multi-File Data Processing Engine</p>
+              <p className="text-xs text-slate-400 mt-1">Deterministic Data Processing Engine</p>
             </div>
           </div>
 
-          {/* Mode Switcher: Ingestion -> Selection -> Preview -> Architecture */}
+          {/* Right Status & Architecture Link */}
           <div className="flex items-center space-x-3">
-            <div className="bg-slate-950 p-1 rounded-lg border border-slate-800 flex space-x-1 text-xs">
-              <button
-                type="button"
-                onClick={() => setMainView('ingestion')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
-                  mainView === 'ingestion'
-                    ? 'bg-cyan-600 text-slate-950 font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <HardDriveDownload className="w-3.5 h-3.5" />
-                <span>1. Ingest</span>
-                {files.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-cyan-300 font-mono">
-                    {files.length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMainView('selection')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
-                  mainView === 'selection'
-                    ? 'bg-cyan-600 text-slate-950 font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <CheckSquare className="w-3.5 h-3.5" />
-                <span>2. Select & Filter</span>
-                {selectedColumns.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-cyan-300 font-mono">
-                    {selectedColumns.length}
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMainView('join')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
-                  mainView === 'join'
-                    ? 'bg-cyan-600 text-slate-950 font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <GitMerge className="w-3.5 h-3.5" />
-                <span>3. Match & Join</span>
-                {files.length >= 2 && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-emerald-300 font-mono">
-                    Ready
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMainView('preview')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
-                  mainView === 'preview'
-                    ? 'bg-cyan-600 text-slate-950 font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Eye className="w-3.5 h-3.5" />
-                <span>4. Preview</span>
-                {(executionResult || joinResult) && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">
-                    {previewTab === 'join' && joinResult
-                      ? joinResult.result.rows.length
-                      : executionResult?.rows.length ?? 0}
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMainView('export')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
-                  mainView === 'export'
-                    ? 'bg-cyan-600 text-slate-950 font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>5. Export</span>
-                {currentExportDataset && (
-                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-slate-900 text-emerald-300 font-mono">
-                    Ready
-                  </span>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMainView('architecture')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
-                  mainView === 'architecture'
-                    ? 'bg-cyan-600 text-slate-950 font-semibold shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Architecture</span>
-              </button>
+            <div className="flex items-center space-x-2 text-xs bg-slate-950 px-3.5 py-1.5 rounded-full border border-slate-800 shadow-sm">
+              <span className="text-[11px] text-slate-400 font-mono">Status:</span>
+              <span className="inline-flex items-center space-x-1.5 text-emerald-400 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="font-mono">● Local • Deterministic</span>
+              </span>
             </div>
 
-            <div className="hidden lg:flex items-center space-x-2 text-xs text-emerald-400 bg-emerald-950/40 border border-emerald-800/60 px-3 py-1.5 rounded-full">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Deterministic Core</span>
+            <button
+              type="button"
+              onClick={() => setMainView('architecture')}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+                mainView === 'architecture'
+                  ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 shadow-sm'
+                  : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Architecture</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 5-Step Workflow Navigation */}
+        <div className="border-t border-slate-800/80 bg-slate-950/70">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between overflow-x-auto no-scrollbar gap-2">
+            <div className="flex items-center space-x-2">
+              {[
+                {
+                  id: 'ingestion',
+                  step: '01',
+                  label: 'Ingest',
+                  icon: HardDriveDownload,
+                  isCompleted: files.length > 0,
+                  countBadge: files.length > 0 ? `${files.length} file${files.length > 1 ? 's' : ''}` : null,
+                },
+                {
+                  id: 'selection',
+                  step: '02',
+                  label: 'Select & Filter',
+                  icon: CheckSquare,
+                  isCompleted: selectedColumns.length > 0,
+                  countBadge: selectedColumns.length > 0 ? `${selectedColumns.length} fields` : null,
+                },
+                {
+                  id: 'join',
+                  step: '03',
+                  label: 'Match & Join',
+                  icon: GitMerge,
+                  isCompleted: joinResult !== null,
+                  countBadge: joinResult ? 'Merged' : files.length >= 2 ? 'Ready' : null,
+                },
+                {
+                  id: 'preview',
+                  step: '04',
+                  label: 'Preview',
+                  icon: Eye,
+                  isCompleted: !!(executionResult || joinResult),
+                  countBadge: (previewTab === 'join' && joinResult ? joinResult.result.rows.length : (executionResult?.rows.length ?? 0)) > 0
+                    ? `${(previewTab === 'join' && joinResult ? joinResult.result.rows.length : (executionResult?.rows.length ?? 0)).toLocaleString()} rows`
+                    : null,
+                },
+                {
+                  id: 'export',
+                  step: '05',
+                  label: 'Export',
+                  icon: Download,
+                  isCompleted: !!currentExportDataset,
+                  countBadge: currentExportDataset ? 'Ready' : null,
+                },
+              ].map((tab) => {
+                const isActive = mainView === tab.id;
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setMainView(tab.id as MainView)}
+                    className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-cyan-500 text-slate-950 font-bold shadow-md shadow-cyan-950/40 ring-1 ring-cyan-400'
+                        : tab.isCompleted
+                        ? 'bg-slate-900 text-slate-200 border border-slate-800 hover:border-slate-700 hover:text-white'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/40'
+                    }`}
+                  >
+                    <span
+                      className={`font-mono text-[11px] font-bold ${
+                        isActive ? 'text-slate-950' : tab.isCompleted ? 'text-cyan-400' : 'text-slate-500'
+                      }`}
+                    >
+                      {tab.step}
+                    </span>
+                    <Icon
+                      className={`w-3.5 h-3.5 ${
+                        isActive ? 'text-slate-950' : tab.isCompleted ? 'text-cyan-400' : 'text-slate-400'
+                      }`}
+                    />
+                    <span className="font-semibold">{tab.label}</span>
+                    {tab.countBadge && (
+                      <span
+                        className={`ml-1 px-1.5 py-0.2 rounded text-[10px] font-mono ${
+                          isActive
+                            ? 'bg-slate-950/20 text-slate-950 font-bold'
+                            : 'bg-slate-950 text-cyan-300 border border-slate-800'
+                        }`}
+                      >
+                        {tab.countBadge}
+                      </span>
+                    )}
+                    {tab.isCompleted && !isActive && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -415,7 +444,7 @@ export default function App() {
                 <button
                   key={tab.id}
                   onClick={() => setArchTab(tab.id as ArchTab)}
-                  className={`flex items-center space-x-2 px-3.5 py-3 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
+                  className={`flex items-center space-x-2 px-3.5 py-2.5 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
                     isActive
                       ? 'border-cyan-400 text-cyan-300 bg-cyan-500/5'
                       : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
@@ -452,6 +481,60 @@ export default function App() {
                 </button>
               </div>
             )}
+
+            {/* Summary KPI Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm">
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span className="font-semibold text-slate-300">Files</span>
+                  <HardDriveDownload className="w-4 h-4 text-cyan-400" />
+                </div>
+                <div className="text-2xl font-bold font-mono text-slate-100 mt-2 tabular-nums">
+                  {files.length}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-1">
+                  {files.length === 0 ? 'No files loaded' : files.length === 1 ? '1 file loaded' : `${files.length} files loaded`}
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm">
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span className="font-semibold text-slate-300">Rows</span>
+                  <Table className="w-4 h-4 text-blue-400" />
+                </div>
+                <div className="text-2xl font-bold font-mono text-slate-100 mt-2 tabular-nums">
+                  {files.reduce((acc, f) => acc + f.sheets.reduce((sAcc, s) => sAcc + s.rowCount, 0), 0).toLocaleString()}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-1">Total record entries</div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm">
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span className="font-semibold text-slate-300">Columns</span>
+                  <Columns className="w-4 h-4 text-purple-400" />
+                </div>
+                <div className="text-2xl font-bold font-mono text-slate-100 mt-2 tabular-nums">
+                  {files.reduce((acc, f) => acc + (f.sheets[0]?.columnCount || 0), 0)}
+                </div>
+                <div className="text-[11px] text-slate-400 mt-1">Structured schema fields</div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm">
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span className="font-semibold text-slate-300">Status</span>
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="flex items-center space-x-2 mt-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-sm font-bold text-emerald-400 font-mono">
+                    Local • Deterministic
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-400 mt-1">
+                  {files.some((f) => f.status === 'error') ? 'Issues detected' : files.length > 0 ? 'Engine ready for queries' : 'Awaiting file import'}
+                </div>
+              </div>
+            </div>
 
             {/* 1. Multi-file Dropzone */}
             <FileDropzone
@@ -504,7 +587,7 @@ export default function App() {
                         setSelectedDatasetId(activeDataset.id);
                         setMainView('selection');
                       }}
-                      className="flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-lg transition-colors border border-slate-700"
+                      className="flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-lg transition-colors border border-slate-700 cursor-pointer"
                     >
                       <CheckSquare className="w-3.5 h-3.5 text-cyan-400" />
                       <span>Select & Filter</span>
@@ -514,7 +597,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => setMainView('join')}
-                      className="flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-md shadow-cyan-950/30"
+                      className="flex items-center justify-center space-x-1.5 px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-md shadow-cyan-950/30 cursor-pointer"
                     >
                       <GitMerge className="w-3.5 h-3.5" />
                       <span>Match & Join Multiple Files</span>
@@ -532,9 +615,16 @@ export default function App() {
               </div>
             ) : (
               files.length === 0 && (
-                <div className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-8 text-center text-xs text-slate-500">
-                  <FileSpreadsheet className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                  <p>No files imported yet. Drag & drop CSV or XLSX files above, or click "Load Sample" to begin.</p>
+                <div className="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-10 text-center max-w-md mx-auto space-y-3">
+                  <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-400 mx-auto shadow-inner">
+                    <FileSpreadsheet className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-base text-slate-200">No files imported</h4>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Drop CSV or XLSX files here to begin.
+                    </p>
+                  </div>
                 </div>
               )
             )}
@@ -673,30 +763,34 @@ export default function App() {
                 onProceedToExport={() => setMainView('export')}
               />
             ) : (
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-12 text-center text-xs text-slate-400 space-y-4">
-                <Eye className="w-10 h-10 text-slate-600 mx-auto" />
-                <div>
-                  <h4 className="font-semibold text-sm text-slate-200">No Query Executed Yet</h4>
-                  <p className="text-slate-400 mt-1 max-w-sm mx-auto">
-                    You haven't executed a data extraction or join yet. Choose an operation to begin:
+              <div className="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-12 text-center max-w-lg mx-auto space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 mx-auto shadow-inner">
+                  <Eye className="w-7 h-7" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-lg text-slate-100 tracking-tight">
+                    No dataset preview ready
+                  </h4>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    Execute a filtered column selection or run a multi-file relational join to inspect transformed rows in real-time.
                   </p>
                 </div>
                 <div className="flex items-center justify-center space-x-3 pt-2">
                   <button
                     type="button"
                     onClick={() => setMainView('selection')}
-                    className="flex items-center space-x-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-lg transition-colors border border-slate-700"
+                    className="flex items-center space-x-1.5 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs rounded-lg transition-colors border border-slate-700 cursor-pointer"
                   >
                     <CheckSquare className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Select & Filter Single Dataset</span>
+                    <span>Select & Filter</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setMainView('join')}
-                    className="flex items-center space-x-1.5 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold text-xs rounded-lg transition-colors"
+                    className="flex items-center space-x-1.5 px-4 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-md shadow-cyan-950/40"
                   >
                     <GitMerge className="w-3.5 h-3.5" />
-                    <span>Match & Join Multiple Datasets</span>
+                    <span>Match & Join</span>
                   </button>
                 </div>
               </div>
@@ -722,6 +816,112 @@ export default function App() {
         {/* ========================================================================= */}
         {mainView === 'architecture' && (
           <div className="space-y-8">
+            {/* Visual Pipeline Required: FILES -> INGESTION -> SCHEMA PROFILER -> SELECT & FILTER -> MATCH & JOIN -> PREVIEW -> EXPORT */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 relative overflow-hidden shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
+                <div>
+                  <div className="inline-flex items-center space-x-2 text-xs uppercase font-mono tracking-wider text-cyan-400 font-semibold bg-cyan-950/70 px-3 py-1 rounded-md border border-cyan-800">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>Deterministic Processing Core</span>
+                  </div>
+                  <h2 className="text-xl font-bold mt-2 text-slate-100">
+                    Deterministic Pipeline Flow
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+                    Every operation runs client-side via type-safe algorithms and relational hash joins. 100% deterministic with zero AI dependencies or hallucination risks.
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2 text-xs text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-800/80 px-3.5 py-1.5 rounded-lg shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Pure Algorithmic Engine</span>
+                </div>
+              </div>
+
+              {/* 7-Stage Flow Visualization */}
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-3 items-stretch relative">
+                {[
+                  {
+                    step: '01',
+                    title: 'FILES',
+                    desc: 'Local CSV & multi-sheet XLSX files',
+                    icon: FileSpreadsheet,
+                    color: 'text-blue-400',
+                  },
+                  {
+                    step: '02',
+                    title: 'INGESTION',
+                    desc: 'In-browser PapaParse & SheetJS parsing',
+                    icon: HardDriveDownload,
+                    color: 'text-cyan-400',
+                  },
+                  {
+                    step: '03',
+                    title: 'SCHEMA PROFILER',
+                    desc: 'Deterministic type inference & null audits',
+                    icon: Sparkles,
+                    color: 'text-purple-400',
+                  },
+                  {
+                    step: '04',
+                    title: 'SELECT & FILTER',
+                    desc: 'Field projection & boolean expression trees',
+                    icon: CheckSquare,
+                    color: 'text-amber-400',
+                  },
+                  {
+                    step: '05',
+                    title: 'MATCH & JOIN',
+                    desc: 'O(N+M) equi-hash join across datasets',
+                    icon: GitMerge,
+                    color: 'text-emerald-400',
+                  },
+                  {
+                    step: '06',
+                    title: 'PREVIEW',
+                    desc: 'Paginated in-memory preview table',
+                    icon: Eye,
+                    color: 'text-cyan-400',
+                  },
+                  {
+                    step: '07',
+                    title: 'EXPORT',
+                    desc: 'RFC 4180 CSV & binary XLSX downloads',
+                    icon: Download,
+                    color: 'text-emerald-300',
+                  },
+                ].map((stage, idx) => {
+                  const StageIcon = stage.icon;
+                  return (
+                    <div key={stage.step} className="relative flex flex-col justify-between">
+                      <div className="w-full h-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 flex flex-col justify-between hover:border-cyan-500/40 transition-colors">
+                        <div>
+                          <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 mb-1.5">
+                            <span className="font-bold text-cyan-400">{stage.step}</span>
+                            <StageIcon className={`w-3.5 h-3.5 ${stage.color}`} />
+                          </div>
+                          <div className="font-bold text-xs text-slate-100 font-mono tracking-tight">
+                            {stage.title}
+                          </div>
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-2.5 leading-relaxed">
+                          {stage.desc}
+                        </div>
+                      </div>
+                      {idx < 6 && (
+                        <div className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 text-cyan-400/80">
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+                      {idx < 6 && (
+                        <div className="flex md:hidden justify-center my-1 text-cyan-400/80">
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
             {/* TAB 1: ARCHITECTURE OVERVIEW */}
             {archTab === 'architecture' && (
               <div className="space-y-8">

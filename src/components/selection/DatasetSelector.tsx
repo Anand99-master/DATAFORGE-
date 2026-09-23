@@ -36,9 +36,14 @@ export const DatasetSelector: React.FC<DatasetSelectorProps> = ({
 
   if (validDatasets.length === 0) {
     return (
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 text-center text-xs text-slate-400">
-        <Database className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-        <p>No active datasets available for selection. Please import files in the Ingestion tab first.</p>
+      <div className="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-12 text-center max-w-lg mx-auto">
+        <div className="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center text-slate-400 mx-auto mb-3 shadow-inner">
+          <Database className="w-6 h-6" />
+        </div>
+        <h4 className="font-bold text-base text-slate-200">No datasets available</h4>
+        <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+          Import CSV or XLSX files in the Ingest tab to select fields and build filters.
+        </p>
       </div>
     );
   }

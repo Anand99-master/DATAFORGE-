@@ -163,16 +163,20 @@ export const SelectionSummary: React.FC<SelectionSummaryProps> = ({
         </div>
 
         {/* Block 4: Live Result Estimation */}
-        <div className="p-4 rounded-xl bg-slate-950 border border-cyan-800/60 shadow-lg shadow-cyan-950/20 flex flex-col justify-between">
-          <div className="text-[11px] font-mono text-cyan-400 uppercase tracking-wider">
-            ESTIMATED OUTPUT
+        <div className="p-4 rounded-xl bg-slate-950 border border-cyan-500/60 shadow-lg shadow-cyan-950/30 flex flex-col justify-between ring-1 ring-cyan-500/30">
+          <div className="flex items-center justify-between text-[11px] font-mono text-cyan-400 uppercase tracking-wider">
+            <span>PROMINENT STATISTIC</span>
+            <span className="text-[10px] bg-cyan-950 px-1.5 py-0.5 rounded text-cyan-300 border border-cyan-800">
+              Live
+            </span>
           </div>
           <div className="mt-2">
-            <div className="text-2xl font-bold font-mono text-emerald-400">
+            <div className="text-xs text-slate-400 font-medium">Matching Rows:</div>
+            <div className="text-3xl font-extrabold font-mono text-emerald-400 tabular-nums tracking-tight">
               {matchingRowCount.toLocaleString()}
             </div>
-            <div className="text-xs text-slate-400 mt-0.5">
-              matching rows ({matchPercentage}% of source)
+            <div className="text-xs text-slate-400 mt-1">
+              of {totalSourceRows.toLocaleString()} source records ({matchPercentage}%)
             </div>
           </div>
           <div className="mt-3 text-[11px] text-slate-400 font-mono">

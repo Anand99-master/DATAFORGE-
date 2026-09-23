@@ -107,29 +107,77 @@ export const FileList: React.FC<FileListProps> = ({
                       </span>
                     </div>
 
-                    {/* Status info */}
+                    {/* Status and dimension metadata */}
                     {!isError ? (
-                      <div className="flex items-center space-x-3 mt-1.5 text-xs text-slate-400">
-                        <span className="flex items-center space-x-1 text-emerald-400">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                      <div className="flex items-center space-x-3 mt-1.5 text-xs text-slate-400 flex-wrap gap-y-1">
+                        <span className="flex items-center space-x-1.5 text-emerald-400 font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                           <span>Ready</span>
                         </span>
-                        {isXlsx && (
-                          <span className="text-slate-400 font-mono text-[11px]">
-                            {file.sheetNames.length} sheet{file.sheetNames.length > 1 ? 's' : ''} detected
-                          </span>
-                        )}
-                        <span>
-                          {file.sheets.reduce((acc, s) => acc + s.rowCount, 0)} total rows
+                        <span>•</span>
+                        <span className="font-mono text-slate-300">
+                          {file.sheets.reduce((acc, s) => acc + s.rowCount, 0).toLocaleString()} rows
                         </span>
+                        <span>•</span>
+                        <span className="font-mono text-slate-300">
+                          {file.sheets[0]?.columnCount ?? 0} columns
+                        </span>
+                        {isXlsx && file.sheetNames.length > 1 && (
+                          <>
+                            <span>•</span>
+                            <span className="text-slate-400 font-mono text-[11px]">
+                              {file.sheetNames.length} sheets
+                            </span>
+                          </>
+                        )}
                       </div>
                     ) : (
-                      <div className="mt-2 p-2.5 rounded bg-rose-950/30 border border-rose-900/60 text-xs text-rose-300 flex items-start space-x-2">
-                        <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                        <div>
-                          <strong className="font-semibold">Ingestion Error: </strong>
-                          {file.errorMessage}
+                      <div className="mt-3 p-3.5 rounded-xl bg-rose-950/30 border border-rose-900/60 text-xs text-rose-300 space-y-2">
+                        <div className="flex items-start space-x-2.5">
+                          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <div className="font-semibold text-rose-200">
+                              Ingestion Failed: Unable to parse file
+                            </div>
+                            <p className="text-slate-300 text-[11px] mt-0.5">
+                              {file.errorMessage}
+                            </p>
+                          </div>
                         </div>
+
+                        <div className="pt-2 border-t border-rose-900/40 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-400">
+                          <div>
+                            <span className="text-slate-500">Affected File: </span>
+                            <span className="font-mono text-slate-300">{file.name}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500">Suggested Action: </span>
+                            <span className="text-slate-300">
+                              {file.fileType === 'csv'
+                                ? 'Verify file is valid UTF-8 text with standard comma/tab delimiters.'
+                                : 'Ensure file is a valid, uncorrupted Excel workbook (.xlsx).'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <details className="text-[10px] text-slate-500 pt-1">
+                          <summary className="cursor-pointer hover:text-slate-400 font-mono">
+                            Technical diagnostics
+                          </summary>
+                          <pre className="mt-1 p-2 rounded bg-slate-950 text-rose-400 font-mono overflow-x-auto whitespace-pre-wrap">
+                            {JSON.stringify(
+                              {
+                                fileId: file.id,
+                                fileName: file.name,
+                                type: file.fileType,
+                                sizeBytes: file.sizeBytes,
+                                error: file.errorMessage,
+                              },
+                              null,
+                              2
+                            )}
+                          </pre>
+                        </details>
                       </div>
                     )}
                   </div>
