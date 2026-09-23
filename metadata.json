@@ -1,0 +1,6 @@
+{
+  "name": "DataForge - Deterministic Data Processing Engine",
+  "description": "Deterministic, privacy-first multi-file data extraction, joining, and filtering engine for CSV and Excel files.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
